@@ -49,15 +49,18 @@ app.get("/auth", (req, res) => {
 
 app.get("/callback", async (req, res) => {
   try {
-    const code = req.query.code as string;
+    const authCredentials = await oauth2Client.getToken(
+      req.query.code as string
+    );
 
-    if (!code) {
-      return res.status(400).json({ error: "Authorization code is required" });
+    if (!authCredentials) {
+      return res
+        .status(400)
+        .json({ error: "Invalid authentication credentials" });
     }
+    const tokens = authCredentials.tokens;
 
-    const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
-
     res.json({ message: "Successfully authenticated with Google Calendar" });
   } catch (error) {
     console.error("Callback error:", error);
@@ -105,10 +108,17 @@ app.post("/create-event", async (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal server error" });
-});
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error(err.stack);
+    res.status(500).json({ error: "Internal server error" });
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
