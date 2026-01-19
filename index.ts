@@ -227,7 +227,10 @@ app.get("/microsoft/auth", async (req, res) => {
     }
 
     const url = await microsoftAuthClient.getAuthCodeUrl({
-      scopes: ["Calendars.ReadWrite"],
+      scopes: [
+        "Calendars.ReadWrite",
+        "OnlineMeetings.ReadWrite", // ← THÊM DÒNG NÀY
+      ],
       redirectUri: redirectUri,
     });
 
@@ -243,7 +246,6 @@ app.get("/microsoft/callback", async (req, res) => {
     const code = req.query.code as string;
     const redirectUri = process.env.MICROSOFT_REDIRECT_URL;
 
-    // Validate authorization code
     if (!code || typeof code !== "string") {
       return res
         .status(400)
@@ -256,14 +258,15 @@ app.get("/microsoft/callback", async (req, res) => {
         .json({ error: "Microsoft redirect URL not configured" });
     }
 
-    // Acquire token
     const result = await microsoftAuthClient.acquireTokenByCode({
       code: code,
-      scopes: ["Calendars.ReadWrite"],
+      scopes: [
+        "Calendars.ReadWrite",
+        "OnlineMeetings.ReadWrite", // ← THÊM DÒNG NÀY
+      ],
       redirectUri: redirectUri,
     });
 
-    // Validate result
     if (!result || !result.accessToken) {
       return res
         .status(400)
